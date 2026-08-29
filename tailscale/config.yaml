@@ -1,16 +1,13 @@
 ---
-name: Tailscale
+name: "Ambi Support Tailscale"
 version: dev
-slug: tailscale
-description: Zero config VPN for building secure networks
-url: https://github.com/hassio-addons/app-tailscale
-ingress: true
-ingress_port: 0
-ingress_stream: true
-startup: services
-panel_icon: mdi:vpn
+slug: ambi_support_tailscale
+description: "Ephemeral, on-demand Tailscale node for Ambi remote support"
+url: https://github.com/AmbiSG/app-tailscale
+ingress: false
+startup: manual
+panel_icon: mdi:lifebuoy
 arch:
-  - aarch64
   - amd64
 init: false
 hassio_api: true
@@ -39,20 +36,21 @@ map:
   - type: ssl
     read_only: false
 ports:
-  41641/udp: null
+  41642/udp: null
 options:
-  accept_dns: true
+  accept_dns: false
   accept_routes: false
   advertise_connector: false
   advertise_exit_node: false
   advertise_routes: []
-  advertise_tags: []
+  advertise_tags:
+    - "tag:ambi-support"
   always_use_derp: false
+  auth_key: ""
+  force_reauth: false
   log_level: info
   log_upload: false
-  login_server: "https://controlplane.tailscale.com"
-  share_homeassistant: disabled
-  share_on_port: 443
+  login_server: "https://headscale.ambi.sg"
   services: []
   snat_subnet_routes: true
   stateful_filtering: false
@@ -76,12 +74,12 @@ schema:
   advertise_tags:
     - "match(^tag:[a-zA-Z][a-zA-Z0-9-]*$)"
   always_use_derp: bool
+  auth_key: "match(^[a-zA-Z0-9]*$)?"
   exit_node: "match(^(?:(?:(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]?)\\d)\\.){3}(?:25[0-5]|(?:2[0-4]|1\\d|[1-9]?)\\d)|[a-fA-F\\d.:]+:[a-fA-F\\d.:]+|[a-fA-F\\d]{8}(?:-[a-fA-F\\d]{4}){3}-[a-fA-F\\d]{12}|auto:any)$)?"
+  force_reauth: bool
   log_level: list(trace|debug|info|notice|warning|error|fatal)
   log_upload: bool
   login_server: url
-  share_homeassistant: list(disabled|serve|funnel)
-  share_on_port: match(^(?:443|8443|10000)$)
   services:
     - name: "match(^svc:[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$)"
       target: "match(^(?:https?|tcp)://127\\.0\\.0\\.1:([1-9]\\d{0,3}|[1-5]\\d{4}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])$)"
