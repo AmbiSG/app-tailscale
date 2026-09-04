@@ -1,0 +1,36 @@
+---
+name: Sync upstream
+
+# GitHub scheduled workflows can be delayed, so this is an upper-bound cadence,
+# not an immediate event-driven mirror.
+on:
+  schedule:
+    - cron: "17 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the fork
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Merge upstream main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/hassio-addons/app-tailscale.git
+          git fetch --no-tags upstream main
+          git merge --no-edit upstream/main
+          git push origin HEAD:main
