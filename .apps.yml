@@ -1,0 +1,7 @@
+---
+channel: stable
+apps:
+  ambi_support_tailscale:
+    repository: AmbiSG/app-tailscale
+    target: tailscale
+    image: ghcr.io/ambisg/ambi-support-tailscale/{arch}

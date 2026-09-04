@@ -1,9 +1,9 @@
 ---
-name: Tailscale
+name: Ambi Support Tailscale
 version: dev
-slug: tailscale
+slug: ambi_support_tailscale
 description: Zero config VPN for building secure networks
-url: https://github.com/hassio-addons/app-tailscale
+url: https://github.com/AmbiSG/app-tailscale
 ingress: true
 ingress_port: 0
 ingress_stream: true
@@ -41,7 +41,7 @@ map:
 ports:
   41641/udp: null
 options:
-  accept_dns: true
+  accept_dns: false
   accept_routes: false
   advertise_connector: false
   advertise_exit_node: false
@@ -65,7 +65,7 @@ options:
     share: false
     ssl: false
   taildrop: false
-  userspace_networking: false
+  userspace_networking: true
 schema:
   accept_dns: bool
   accept_routes: bool
