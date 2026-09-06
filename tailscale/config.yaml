@@ -1,6 +1,6 @@
 ---
 name: Ambi Support Tailscale
-version: dev
+version: 0.29.0-ambi.1
 slug: ambi_support_tailscale
 description: Zero config VPN for building secure networks
 url: https://github.com/AmbiSG/app-tailscale
