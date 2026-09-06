@@ -1,0 +1,24 @@
+---
+name: Publish package visibility
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Make Ambi app package public
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set package visibility
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          gh api
+          --method PATCH
+          /orgs/AmbiSG/packages/container/ambi-support-tailscale
+          -f visibility=public
