@@ -21,9 +21,7 @@ Even better: You could submit a pull request with a fix / new feature!
 1. Search our repository for open or closed [pull requests][prs] that relates
    to your submission. You don't want to duplicate effort.
 
-1. You may merge the pull request in once you have the sign-off of two other
-   developers, or if you do not have permission to do that, you may request
-   the second reviewer to merge it for you.
+1. A repository maintainer must approve changes before they are merged.
 
-[github]: https://github.com/hassio-addons/app-tailscale/issues
-[prs]: https://github.com/hassio-addons/app-tailscale/pulls
+[github]: https://github.com/AmbiSG/app-tailscale/issues
+[prs]: https://github.com/AmbiSG/app-tailscale/pulls

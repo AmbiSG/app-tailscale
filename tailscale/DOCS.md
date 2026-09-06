@@ -589,16 +589,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 [app-badge]: https://my.home-assistant.io/badges/supervisor_addon.svg
-[app]: https://my.home-assistant.io/redirect/supervisor_addon/?addon=a0d7b954_tailscale&repository_url=https%3A%2F%2Fgithub.com%2Fhassio-addons%2Frepository
-[contributors]: https://github.com/hassio-addons/app-tailscale/graphs/contributors
+[app]: https://my.home-assistant.io/redirect/supervisor_addon/?addon=ambi_support_tailscale&repository_url=https%3A%2F%2Fgithub.com%2FAmbiSG%2Fapp-tailscale
+[contributors]: https://github.com/AmbiSG/app-tailscale/graphs/contributors
 [discord-ha]: https://www.home-assistant.io/join-chat
 [discord]: https://discord.me/hassioaddons
 [forum]: https://community.home-assistant.io/?u=frenck
 [frenck]: https://github.com/frenck
 [headscale]: https://github.com/juanfont/headscale
-[issue]: https://github.com/hassio-addons/app-tailscale/issues
+[issue]: https://github.com/AmbiSG/app-tailscale/issues
 [reddit]: https://reddit.com/r/homeassistant
-[releases]: https://github.com/hassio-addons/app-tailscale/releases
+[releases]: https://github.com/AmbiSG/app-tailscale/releases
 [semver]: https://semver.org/spec/v2.0.0.html
 [tailscale_acls]: https://console.tailscale.com/admin/acls
 [tailscale_dns]: https://console.tailscale.com/admin/dns

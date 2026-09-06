@@ -14,9 +14,11 @@ Baseline: `hassio-addons/app-tailscale` commit
 - `tailscale/rootfs/etc/s6-overlay/s6-rc.d/web/run` and
   `tailscale/rootfs/etc/nginx/includes/upstream.conf`: use local web backend
   port `25900`, leaving upstream's `25899` available to the first instance.
-- Repository metadata and this document describe the fork.
+- Repository metadata, documentation and CI describe the stable Ambi fork.
 - `tailscale/config.yaml` advertises the immutable Ambi release and its
   pre-built multi-architecture image.
+- Ambi publishes explicitly with `publish-ambi.yaml`; the upstream deploy
+  workflow and generated upstream README template are intentionally absent.
 
 All other app code, startup hooks, option schemas and dependency pins match
 the baseline. Do not replace the service graph or remove upstream migrations.
