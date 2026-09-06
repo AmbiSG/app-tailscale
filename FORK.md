@@ -7,8 +7,6 @@ the `ambi_support_tailscale` slug; the source directory is not its identity.
 Baseline: `hassio-addons/app-tailscale` commit
 `55c88fe8c6b60b572d8776b7fb3ff99f7e9c8c09`.
 
-Current Ambi release: `0.29.0-ambi.1`.
-
 ## Intentional differences
 
 - `tailscale/config.yaml`: Ambi name, slug and repository URL; default

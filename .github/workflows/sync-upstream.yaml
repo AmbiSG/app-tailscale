@@ -3,6 +3,7 @@ name: Sync upstream
 
 # GitHub scheduled workflows can be delayed, so this is an upper-bound cadence,
 # not an immediate event-driven mirror.
+# yamllint disable-line rule:truthy
 on:
   schedule:
     - cron: "17 */4 * * *"
