@@ -15,6 +15,8 @@ Baseline: `hassio-addons/app-tailscale` commit
   `tailscale/rootfs/etc/nginx/includes/upstream.conf`: use local web backend
   port `25900`, leaving upstream's `25899` available to the first instance.
 - Repository metadata and this document describe the fork.
+- `tailscale/config.yaml` advertises the immutable Ambi release and its
+  pre-built multi-architecture image.
 
 All other app code, startup hooks, option schemas and dependency pins match
 the baseline. Do not replace the service graph or remove upstream migrations.
