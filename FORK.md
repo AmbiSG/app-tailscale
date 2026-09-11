@@ -5,7 +5,7 @@ Keep the source in upstream's `tailscale/` directory. The installed app keeps
 the `ambi_support_tailscale` slug; the source directory is not its identity.
 
 Baseline: `hassio-addons/app-tailscale` commit
-`55c88fe8c6b60b572d8776b7fb3ff99f7e9c8c09`.
+`dfca729eb77742a1774e312da1133021df252fe4`.
 
 ## Intentional differences
 
@@ -53,3 +53,10 @@ Merge upstream normally and review the three intentional app-file differences
 above. Preserve executable file modes when moving files on Windows. Keeping
 the original paths allows Git to apply upstream changes directly. Merge upstream
 history as well as its file changes so Git records which updates are included.
+
+Keep `tailscale/Dockerfile` and `tailscale/build.yaml` identical to upstream.
+The Ambi publishing workflow reads each architecture's `build_from` entry from
+upstream's YAML and passes it as `BUILD_FROM`; missing entries stop the build.
+Do not hardcode base image versions or rewrite the Dockerfile for publishing.
+Run `publish-ambi.yaml` with `publish` disabled to validate both architecture
+builds without pushing images or publishing a manifest.

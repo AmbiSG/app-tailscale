@@ -1,4 +1,6 @@
-FROM ghcr.io/hassio-addons/base:21.0.4
+ARG BUILD_FROM=ghcr.io/hassio-addons/base/amd64:21.0.5
+# hadolint ignore=DL3006
+FROM ${BUILD_FROM}
 
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

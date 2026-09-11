@@ -4,6 +4,11 @@ name: Publish Ambi app
 # yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Push and sign images and publish the manifest
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -73,10 +78,31 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Read upstream base image
+        id: base
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
+        run: |
+          python3 -m venv "$RUNNER_TEMP/base-image-venv"
+          "$RUNNER_TEMP/base-image-venv/bin/pip" install PyYAML==6.0.2
+          "$RUNNER_TEMP/base-image-venv/bin/python" - <<'PY'
+          import os
+          import yaml
+
+          with open("tailscale/build.yaml", encoding="utf-8") as source:
+              image = yaml.safe_load(source)["build_from"][os.environ["BUILD_ARCH"]]
+          if not isinstance(image, str) or not image or any(c.isspace() for c in image):
+              raise ValueError("Missing or invalid upstream base image")
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"image={image}\n")
+          PY
+
       - name: Build image
         uses: home-assistant/builder/actions/build-image@2026.06.0
         with:
           arch: ${{ matrix.arch }}
+          build-args: |
+            BUILD_FROM=${{ steps.base.outputs.image }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           context: ./tailscale
           image: ${{ matrix.image }}
@@ -86,11 +112,13 @@ jobs:
             io.hass.name=${{ needs.prepare.outputs.name }}
             io.hass.description=${{ needs.prepare.outputs.description }}
             io.hass.url=${{ needs.prepare.outputs.url }}
-          push: true
+          push: ${{ inputs.publish }}
+          cosign: ${{ inputs.publish }}
           version: ${{ needs.prepare.outputs.version }}
 
   manifest:
     name: Publish multi-arch manifest
+    if: inputs.publish
     needs:
       - prepare
       - build
