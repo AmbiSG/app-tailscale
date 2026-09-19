@@ -10,6 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 concurrency:
@@ -21,11 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the fork
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Merge upstream main
+        id: merge
         shell: bash
         run: |
           set -euo pipefail
@@ -33,5 +35,23 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/hassio-addons/app-tailscale.git
           git fetch --no-tags upstream main
+          before="$(git rev-parse HEAD)"
           git merge --no-edit upstream/main
+          after="$(git rev-parse HEAD)"
+          if [[ "$before" == "$after" ]]; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          fi
           git push origin HEAD:main
+
+      # GITHUB_TOKEN pushes do not emit ordinary push workflow events. Dispatch
+      # the existing CI only after this job actually merged an upstream change.
+      - name: Validate merged upstream change
+        if: steps.merge.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run ci.yaml --ref main
