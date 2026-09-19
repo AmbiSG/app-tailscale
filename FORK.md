@@ -14,11 +14,12 @@ Baseline: `hassio-addons/app-tailscale` commit
 - `tailscale/rootfs/etc/s6-overlay/s6-rc.d/web/run` and
   `tailscale/rootfs/etc/nginx/includes/upstream.conf`: use local web backend
   port `25900`, leaving upstream's `25899` available to the first instance.
-- Repository metadata, documentation and CI describe the stable Ambi fork.
-- `tailscale/config.yaml` advertises the immutable Ambi release and its
-  pre-built multi-architecture image.
-- Ambi publishes explicitly with `publish-ambi.yaml`; the upstream deploy
-  workflow and generated upstream README template are intentionally absent.
+- Repository metadata and documentation describe the stable Ambi fork.
+- A scheduled sync records the upstream baseline, derives an immutable Ambi
+  version, validates both architectures, signs and publishes the image, and
+  creates the matching GitHub release without a reviewer gate.
+- The upstream deploy workflow and generated upstream README template are
+  intentionally absent.
 
 All other app code, startup hooks, option schemas and dependency pins match
 the baseline. Do not replace the service graph or remove upstream migrations.
@@ -49,14 +50,19 @@ remote access through both tailnets on a Home Assistant machine before release.
 
 ## Updating upstream
 
-Merge upstream normally and review the three intentional app-file differences
-above. Preserve executable file modes when moving files on Windows. Keeping
-the original paths allows Git to apply upstream changes directly. Merge upstream
-history as well as its file changes so Git records which updates are included.
+The sync-upstream workflow is the normal release path. It merges upstream
+history, applies the small declarative coexistence overlay, verifies that
+tailscale/Dockerfile and tailscale/build.yaml remain upstream-identical, then
+validates, signs, publishes, and verifies AMD64 and ARM64 images before
+creating the GitHub release. A failed build or publish retries on the next
+scheduled run because the versioned release tag is created last.
 
-Keep `tailscale/Dockerfile` and `tailscale/build.yaml` identical to upstream.
-The Ambi publishing workflow reads each architecture's `build_from` entry from
-upstream's YAML and passes it as `BUILD_FROM`; missing entries stop the build.
-Do not hardcode base image versions or rewrite the Dockerfile for publishing.
-Run `publish-ambi.yaml` with `publish` disabled to validate both architecture
-builds without pushing images or publishing a manifest.
+The reconciliation script only accepts the declared slug/default/port
+structure. A merge conflict, missing expected field, changed port structure,
+or upstream build-file divergence stops the run instead of choosing ours or
+theirs. That is the sole exceptional maintenance path; normal compatible
+upstream releases require no approval.
+
+The publish workflow remains manually dispatchable with publish disabled for
+diagnostics. Do not hardcode base image versions or rewrite the Dockerfile for
+publishing.

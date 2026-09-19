@@ -25,11 +25,14 @@ See [the app documentation](tailscale/DOCS.md) for configuration options and
 
 ## Maintenance
 
-- `.github/workflows/sync-upstream.yaml` regularly merges upstream changes.
-- `.github/workflows/ci.yaml` validates stable app metadata on pull requests.
-- `.github/workflows/publish-ambi.yaml` performs the explicit multi-architecture
-  GHCR publish.
-- Release Drafter prepares release notes; it does not publish images.
+- The sync-upstream workflow merges compatible upstream changes, regenerates
+  the immutable Ambi version, and runs the complete validated, signed release
+  path without reviewer approval.
+- The CI workflow validates stable app metadata on pull requests and as the
+  sync release gate.
+- The publish workflow builds, signs, publishes, and verifies the AMD64/ARM64
+  GHCR manifest; it is reusable from sync and manually dispatchable for
+  diagnostics.
 
 ## Attribution
 

@@ -3,6 +3,15 @@ name: Publish Ambi app
 
 # yamllint disable-line rule:truthy
 on:
+  workflow_call:
+    inputs:
+      publish:
+        description: Push and sign images and publish the manifest
+        required: true
+        type: boolean
+      source_ref:
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       publish:
@@ -29,6 +38,8 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_ref || github.sha }}
 
       - name: Get app information
         id: info
@@ -77,6 +88,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ inputs.source_ref || github.sha }}
 
       - name: Read upstream base image
         id: base
@@ -135,3 +147,40 @@ jobs:
           image-name: ${{ needs.prepare.outputs.image_name }}
           image-tags: ${{ needs.prepare.outputs.version }}
           registry-prefix: ${{ needs.prepare.outputs.registry_prefix }}
+
+  verify:
+    name: Verify published multi-arch manifest
+    if: inputs.publish
+    needs:
+      - prepare
+      - manifest
+    runs-on: ubuntu-latest
+    permissions:
+      packages: read
+    env:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      IMAGE: ${{ needs.prepare.outputs.registry_prefix }}/${{ needs.prepare.outputs.image_name }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Verify AMD64 and ARM64 manifest entries
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx imagetools inspect --raw "${IMAGE}:${VERSION}" > "$RUNNER_TEMP/manifest.json"
+          python3 - "$RUNNER_TEMP/manifest.json" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as source:
+              manifest = json.load(source)
+          platforms = {
+              (entry.get("platform", {}).get("os"), entry.get("platform", {}).get("architecture"))
+              for entry in manifest.get("manifests", [])
+          }
+          expected = {("linux", "amd64"), ("linux", "arm64")}
+          missing = expected - platforms
+          if missing:
+              raise SystemExit(f"Missing manifest platforms: {sorted(missing)}")
+          print(f"Verified ${IMAGE}:${VERSION} for {sorted(expected)}")
+          PY

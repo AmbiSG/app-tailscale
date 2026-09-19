@@ -10,8 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: write
-  contents: write
+  contents: read
 
 concurrency:
   group: sync-upstream-main
@@ -20,14 +19,21 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_required: ${{ steps.prepare.outputs.release_required }}
+      release_sha: ${{ steps.prepare.outputs.release_sha }}
+      updated: ${{ steps.prepare.outputs.updated }}
+      version: ${{ steps.prepare.outputs.version }}
     steps:
       - name: Check out the fork
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
-      - name: Merge upstream main
-        id: merge
+      - name: Merge upstream and prepare an immutable release
+        id: prepare
         shell: bash
         run: |
           set -euo pipefail
@@ -37,21 +43,89 @@ jobs:
           git fetch --no-tags upstream main
           before="$(git rev-parse HEAD)"
           git merge --no-edit upstream/main
-          after="$(git rev-parse HEAD)"
-          if [[ "$before" == "$after" ]]; then
-            echo "updated=false" >> "$GITHUB_OUTPUT"
+          merged="$(git rev-parse HEAD)"
+          if [[ "$before" == "$merged" ]]; then
+            updated=false
+            version="$(sed -n 's/^version: //p' tailscale/config.yaml)"
           else
-            echo "updated=true" >> "$GITHUB_OUTPUT"
+            updated=true
+            version="$(python3 scripts/reconcile_upstream.py --upstream-ref upstream/main)"
+            if git show-ref --verify --quiet "refs/tags/v${version}"; then
+              echo "Refusing to reuse immutable release tag v${version}" >&2
+              exit 1
+            fi
+            git diff --check
+            git add \
+              FORK.md \
+              tailscale/config.yaml \
+              tailscale/rootfs/etc/nginx/includes/upstream.conf \
+              tailscale/rootfs/etc/s6-overlay/s6-rc.d/web/run
+            git diff --cached --quiet || git commit -m "Prepare automated Ambi release ${version}"
+            git push origin HEAD:main
           fi
-          git push origin HEAD:main
 
-      # GITHUB_TOKEN pushes do not emit ordinary push workflow events. Dispatch
-      # the existing CI only after this job actually merged an upstream change.
-      - name: Validate merged upstream change
-        if: steps.merge.outputs.updated == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+-ambi\.[0-9]+$ ]]; then
+            echo "Invalid Ambi release version: $version" >&2
+            exit 1
+          fi
+          if git show-ref --verify --quiet "refs/tags/v${version}"; then
+            release_required=false
+          else
+            release_required=true
+          fi
+
+          echo "updated=$updated" >> "$GITHUB_OUTPUT"
+          echo "release_required=$release_required" >> "$GITHUB_OUTPUT"
+          echo "release_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  validate:
+    needs: sync
+    if: needs.sync.outputs.release_required == 'true'
+    uses: ./.github/workflows/ci.yaml
+    with:
+      source_ref: ${{ needs.sync.outputs.release_sha }}
+    permissions:
+      contents: read
+
+  publish:
+    needs:
+      - sync
+      - validate
+    if: needs.sync.outputs.release_required == 'true'
+    uses: ./.github/workflows/publish-ambi.yaml
+    with:
+      publish: true
+      source_ref: ${{ needs.sync.outputs.release_sha }}
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+
+  release:
+    needs:
+      - sync
+      - validate
+      - publish
+    if: needs.sync.outputs.release_required == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ needs.sync.outputs.release_sha }}
+      VERSION: ${{ needs.sync.outputs.version }}
+    steps:
+      - name: Create immutable GitHub release
         shell: bash
         run: |
           set -euo pipefail
-          gh workflow run ci.yaml --ref main
+          tag="v${VERSION}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+          gh release create "$tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$RELEASE_SHA" \
+            --title "Ambi Support Tailscale ${VERSION}" \
+            --generate-notes
