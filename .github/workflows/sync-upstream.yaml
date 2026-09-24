@@ -40,7 +40,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/hassio-addons/app-tailscale.git
-          git fetch --no-tags upstream main
+          # Keep upstream release tags separate from fork release tags.
+          git fetch --no-tags upstream main '+refs/tags/v*:refs/tags/upstream/v*'
           before="$(git rev-parse HEAD)"
           git merge --no-edit upstream/main
           merged="$(git rev-parse HEAD)"

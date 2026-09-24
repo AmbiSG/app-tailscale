@@ -170,6 +170,7 @@ jobs:
           docker buildx imagetools inspect --raw "${IMAGE}:${VERSION}" > "$RUNNER_TEMP/manifest.json"
           python3 - "$RUNNER_TEMP/manifest.json" <<'PY'
           import json
+          import os
           import sys
 
           with open(sys.argv[1], encoding="utf-8") as source:
@@ -182,5 +183,5 @@ jobs:
           missing = expected - platforms
           if missing:
               raise SystemExit(f"Missing manifest platforms: {sorted(missing)}")
-          print(f"Verified ${IMAGE}:${VERSION} for {sorted(expected)}")
+          print(f"Verified {os.environ['IMAGE']}:{os.environ['VERSION']} for {sorted(expected)}")
           PY

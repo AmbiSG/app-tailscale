@@ -68,8 +68,10 @@ def replace_or_insert_image(text: str) -> str:
 
 
 def release_version(upstream_ref: str) -> str:
-    tag = git("describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", upstream_ref)
-    match = re.fullmatch(r"v(\d+\.\d+\.\d+)", tag)
+    # sync-upstream.yaml fetches upstream tags as upstream/v* so fork tags do
+    # not affect the version derived for a merged upstream commit.
+    tag = git("describe", "--tags", "--abbrev=0", "--match", "upstream/v*", upstream_ref)
+    match = re.fullmatch(r"upstream/v(\d+\.\d+\.\d+)", tag)
     if match is None:
         raise ReconcileError(f"Nearest upstream tag {tag!r} is not a stable MAJOR.MINOR.PATCH release")
     distance = int(git("rev-list", "--count", f"{tag}..{upstream_ref}"))
