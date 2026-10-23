@@ -43,7 +43,33 @@ jobs:
           # Keep upstream release tags separate from fork release tags.
           git fetch --no-tags upstream main '+refs/tags/v*:refs/tags/upstream/v*'
           before="$(git rev-parse HEAD)"
-          git merge --no-edit upstream/main
+          if ! git merge --no-edit upstream/main; then
+            # Upstream routinely bumps its shared workflow pin in files this
+            # fork replaced (ci.yaml) or removed (deploy, release-drafter).
+            # Those conflicts always resolve to the fork's side; any other
+            # conflict still stops the run for manual resolution.
+            conflicts="$(git diff --name-only --diff-filter=U)"
+            if [[ -z "$conflicts" ]]; then
+              echo "Merge failed without conflicted paths" >&2
+              exit 1
+            fi
+            while IFS= read -r path; do
+              case "$path" in
+                .github/workflows/ci.yaml)
+                  git checkout --ours -- "$path"
+                  git add -- "$path"
+                  ;;
+                .github/workflows/deploy.yaml | .github/workflows/release-drafter.yaml)
+                  git rm --quiet -- "$path"
+                  ;;
+                *)
+                  echo "Merge conflict needs manual resolution: $path" >&2
+                  exit 1
+                  ;;
+              esac
+            done <<< "$conflicts"
+            git commit --no-edit
+          fi
           merged="$(git rev-parse HEAD)"
           if [[ "$before" == "$merged" ]]; then
             updated=false

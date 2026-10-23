@@ -63,6 +63,12 @@ or upstream build-file divergence stops the run instead of choosing ours or
 theirs. That is the sole exceptional maintenance path; normal compatible
 upstream releases require no approval.
 
+The one exception is the fork-owned workflows: a conflict in
+`.github/workflows/ci.yaml` keeps the fork's validator, and a conflict on the
+removed `deploy.yaml` or `release-drafter.yaml` keeps them removed. Upstream
+bumps its shared workflow pin in these files regularly, so the sync resolves
+them automatically. A conflict in any other path still stops the run.
+
 The publish workflow remains manually dispatchable with publish disabled for
 diagnostics. Do not hardcode base image versions or rewrite the Dockerfile for
 publishing.
