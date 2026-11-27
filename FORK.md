@@ -5,7 +5,7 @@ Keep the source in upstream's `tailscale/` directory. The installed app keeps
 the `ambi_support_tailscale` slug; the source directory is not its identity.
 
 Baseline: `hassio-addons/app-tailscale` commit
-`4e5a3f55fa0199eaa32a371f5cae360ce6b81cd2`.
+`4d8f32ecc4ad0bc423986685e249c1dd34439f59`.
 
 ## Intentional differences
 
